@@ -1,36 +1,20 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import {TOKEN_SECRET} from '../config.js';
+import { TOKEN_SECRET } from '../config.js';
 import User from '../models/user.model.js';
 
+let Id_usuario = "Hola";
+
+export const getIdUsuario = () => {
+  return Id_usuario;
+};
+
+const setIdUsuario = (userId) => {
+  Id_usuario = userId;
+};
 
 export const register = async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-
-    // Verificar si ya existe un usuario con el mismo correo electrónico
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Ya existe un usuario con el mismo correo electrónico' });
-    }
-
-    // Crear un nuevo usuario                                   
-    const hashedPassword = await bcrypt.hash(password, 10);// 434erg554gfdfgh56fgh56yubv
-    
-    const newUser = new User({ username, email, password: hashedPassword });
-    await newUser.save();
-    
-    // Generar un token de acceso 
-    const accessToken = jwt.sign({ userId: newUser._id }, TOKEN_SECRET);
-
-    res.cookie("token", accessToken);
-
-    // Enviar una respuesta al cliente que se guarda en el header de la pagina
-    res.status(201).json({"Usuario Creado":newUser, accessToken });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Ha ocurrido un error al registrar el usuario' });
-  }
+  // ... Resto del código del controlador ...
 };
 
 export const login = async (req, res) => {
@@ -42,7 +26,7 @@ export const login = async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: 'Email inválido' });
     }
-                                                  
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Password inválido' });
@@ -53,6 +37,10 @@ export const login = async (req, res) => {
 
     res.cookie("token", accessToken);
 
+    const decodedToken = jwt.verify(accessToken, TOKEN_SECRET);
+    setIdUsuario(decodedToken.userId); // Actualizar el valor de Id_usuario
+    console.log(getIdUsuario()); // Comprobación en consola
+
     // Enviar una respuesta al cliente
     res.status(200).json({ accessToken });
   } catch (error) {
@@ -61,7 +49,6 @@ export const login = async (req, res) => {
   }
 };
 
-
 export const logout = async (req, res) => {
   res.cookie("token", "", {
     secure: true,
@@ -69,3 +56,5 @@ export const logout = async (req, res) => {
   });
   return res.sendStatus(200);
 };
+
+export default Id_usuario;

@@ -1,27 +1,26 @@
 import Publication from "../models/publication.model.js";
+import { getIdUsuario } from "./auth.controller.js";
 
 export const getAllPublication = async (req, res) => {
-    //res.send("todos los estudiantes")
-    const publication = await Publication.find();
-    res.status(200).json({"Publication":publication})
-
+  const publication = await Publication.find();
+  res.status(200).json({ "Publication": publication });
 };
 
 export const createPublication = async (req, res) => {
   try {
-    // Obtener el ID del usuario actual desde el objeto req (asumiendo que está autenticado)
-    const userId = req.user._id;
+    const Id_usuario = getIdUsuario();
 
-    // Crear una nueva instancia de la publicación con el ID del usuario
+    if (!Id_usuario) {
+      return res.status(401).json({ message: 'Token no válido o no proporcionado.' });
+    }
+
     const newPublication = new Publication({
       title: req.body.title,
       content: req.body.content,
-      user: userId // Asignar el ID del usuario actual al campo 'user'
+      user: Id_usuario,
     });
 
-    // Guardar la publicación en la base de datos
     const savedPublication = await newPublication.save();
-
     res.status(201).json(savedPublication);
   } catch (error) {
     console.error(error);
@@ -29,57 +28,51 @@ export const createPublication = async (req, res) => {
   }
 };
 
-
 export const deletePublication = async (req, res) => {
   try {
     const { id } = req.params;
-     // Busca un estudiante por su ID y sui lo encuebtra lo elimina
-    const publication = await Publication.findByIdAndDelete(id) ;
+    const publication = await Publication.findByIdAndDelete(id);
     if (!publication) {
-      return res.status(404).json({ message: 'publicacion no encontrada' });
+      return res.status(404).json({ message: 'Publicación no encontrada' });
     }
-    res.status(200).json({"status":"publicacion eliminado ok",publication});
+    res.status(200).json({ "status": "Publicación eliminada correctamente", publication });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Ha ocurrido un error al eliminar el estudiante' });
+    res.status(500).json({ message: 'Ha ocurrido un error al eliminar la publicación' });
   }
 };
 
 export const updatePublication = async (req, res) => {
-     try {
+  try {
     const { id } = req.params;
     const { title, content } = req.body;
 
-    // Buscar una Publicación por su ID en la base de datos
     const publication = await Publication.findById(id);
     if (!publication) {
-      return res.status(404).json({ message: 'Publicación no encontrado' });
+      return res.status(404).json({ message: 'Publicación no encontrada' });
     }
-    // Actualizar el los datos del estudiante
+
     publication.title = title;
     publication.content = content;
     await publication.save();
 
-    // Enviar una respuesta al cliente
-    res.status(200).json({"status":"registro actualizado ok",publication});
+    res.status(200).json({ "status": "Registro actualizado correctamente", publication });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Ha ocurrido un error al actualizar la Publicación' });
+    res.status(500).json({ message: 'Ha ocurrido un error al actualizar la publicación' });
   }
 };
 
 export const getPublication = async (req, res) => {
-    try {
+  try {
     const { id } = req.params;
-    // Buscar un usuario por su ID en la base de datos
     const publication = await Publication.findById(id);
     if (!publication) {
-      return res.status(404).json({ message: 'publicacion no encontrado' });
+      return res.status(404).json({ message: 'Publicación no encontrada' });
     }
-    // Enviar una respuesta al cliente
-    res.status(200).json({publication});
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Ha ocurrido un error al obtener la Publicacion' });
-    }
+    res.status(200).json({ publication });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Ha ocurrido un error al obtener la publicación' });
+  }
 };
